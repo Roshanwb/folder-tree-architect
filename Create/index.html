@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Structure Generator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --sidebar-width: 320px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            max-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .path-display {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .path-display.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Text Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .editor-header {
+            padding: 1rem 1.5rem;
+            background: var(--light);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-header h3 {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        #treeInput {
+            flex: 1;
+            padding: 1.5rem;
+            border: none;
+            resize: none;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            outline: none;
+            background: #fcfcfc;
+        }
+
+        #treeInput:focus {
+            background: white;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0da271;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-panel h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .setting-group {
+            margin-bottom: 1rem;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        /* Status */
+        .status-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-header h4 {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .status-content {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            color: var(--dark);
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--light);
+            border-radius: 4px;
+        }
+
+        .status-item {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        /* File Counter */
+        .file-counter {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .counter-item {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .counter-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .counter-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Tree Preview */
+        .tree-preview {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tree-preview h4 {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 400px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>
+                    <i class="fas fa-folder-tree"></i>
+                    Tree Structure Generator
+                </h1>
+                <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">
+                    Elite-level folder structure creator from tree view text
+                </p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Settings Panel -->
+                <div class="settings-panel">
+                    <h3><i class="fas fa-cog"></i> Generation Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label>File Creation Mode</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="createEmptyFiles" checked>
+                            <label for="createEmptyFiles">Create empty files</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="addPlaceholderContent">
+                            <label for="addPlaceholderContent">Add placeholder content</label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label>Conflict Resolution</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="overwriteExisting" checked>
+                            <label for="overwriteExisting">Overwrite existing files</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="skipExisting">
+                            <label for="skipExisting">Skip existing files/folders</label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label>Tree Format</label>
+                        <div class="checkbox-group">
+                            <input type="radio" id="formatStandard" name="treeFormat" checked>
+                            <label for="formatStandard">Standard (tree command)</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="radio" id="formatCustom" name="treeFormat">
+                            <label for="formatCustom">Custom indentation</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Counter -->
+                <div class="file-counter">
+                    <div class="counter-item">
+                        <div class="counter-value" id="folderCount">0</div>
+                        <div class="counter-label">Folders</div>
+                    </div>
+                    <div class="counter-item">
+                        <div class="counter-value" id="fileCount">0</div>
+                        <div class="counter-label">Files</div>
+                    </div>
+                </div>
+                
+                <!-- Tree Preview -->
+                <div class="tree-preview">
+                    <h4><i class="fas fa-eye"></i> Structure Preview</h4>
+                    <div id="previewContent" style="font-family: 'Monaco', 'Menlo', monospace; font-size: 0.75rem; color: #4b5563;">
+                        Preview will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="control-grid">
+                    <button class="btn btn-primary" id="selectFolderBtn">
+                        <i class="fas fa-folder-open"></i> Select Target Folder
+                    </button>
+                    <button class="btn btn-secondary" id="parseTreeBtn">
+                        <i class="fas fa-code-branch"></i> Parse Tree Structure
+                    </button>
+                    <button class="btn btn-success" id="generateBtn">
+                        <i class="fas fa-magic"></i> Generate Structure
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <i class="fas fa-broom"></i> Clear All
+                    </button>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--dark);">
+                        Selected Directory:
+                    </label>
+                    <div class="path-display empty" id="selectedPath">
+                        No folder selected. Click "Select Target Folder" to choose a location.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Editor -->
+            <div class="editor-container">
+                <div class="editor-header">
+                    <h3><i class="fas fa-file-tree"></i> Tree View Input</h3>
+                    <div class="editor-actions">
+                        <button class="btn btn-secondary" id="loadExampleBtn" style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+                            <i class="fas fa-file-code"></i> Load Example
+                        </button>
+                    </div>
+                </div>
+                <textarea id="treeInput" placeholder="Paste your tree structure here...
+Example:
+my-project/
+├── src/
+│   ├── index.js
+│   ├── components/
+│   │   ├── Header.js
+│   │   └── Footer.js
+│   └── utils/
+│       └── helpers.js
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── package.json
+└── README.md
+
+Supports tree command output, custom indentation, and various formats."></textarea>
+            </div>
+            
+            <!-- Status Panel -->
+            <div class="status-panel">
+                <div class="status-header">
+                    <h4><i class="fas fa-history"></i> Generation Log</h4>
+                    <button class="btn btn-secondary" id="clearLogBtn" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">
+                        Clear Log
+                    </button>
+                </div>
+                <div class="status-content" id="statusLog">
+                    <div class="status-item">Ready to parse tree structure...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+                <h3 style="margin-bottom: 0.5rem;">Generating Structure</h3>
+                <p id="loadingMessage" style="color: #6b7280;">Please wait while we create your folder structure...</p>
+                <div id="progressDetails" style="margin-top: 1rem; font-size: 0.875rem; color: #4b5563;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Structure Generation</h3>
+            </div>
+            <div class="modal-body">
+                <p>This will create:</p>
+                <ul style="margin: 0.5rem 0 1rem 1.5rem;">
+                    <li><span id="confirmFolders">0</span> folders</li>
+                    <li><span id="confirmFiles">0</span> files</li>
+                </ul>
+                <p style="color: #6b7280; font-size: 0.875rem;">
+                    Target directory: <span id="confirmPath" style="font-family: monospace;"></span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn btn-success" id="confirmBtn">Confirm & Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TreeStructureGenerator {
+            constructor() {
+                this.selectedDirectory = null;
+                this.treeStructure = null;
+                this.parsedData = { folders: 0, files: 0, items: [] };
+                this.statusLog = [];
+                this.isGenerating = false;
+                
+                this.initElements();
+                this.bindEvents();
+                this.updateUI();
+            }
+            
+            initElements() {
+                // Input elements
+                this.treeInput = document.getElementById('treeInput');
+                this.selectedPath = document.getElementById('selectedPath');
+                this.folderCount = document.getElementById('folderCount');
+                this.fileCount = document.getElementById('fileCount');
+                this.previewContent = document.getElementById('previewContent');
+                this.statusLogElement = document.getElementById('statusLog');
+                
+                // Buttons
+                this.selectFolderBtn = document.getElementById('selectFolderBtn');
+                this.parseTreeBtn = document.getElementById('parseTreeBtn');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.loadExampleBtn = document.getElementById('loadExampleBtn');
+                this.clearLogBtn = document.getElementById('clearLogBtn');
+                
+                // Modal elements
+                this.loadingModal = document.getElementById('loadingModal');
+                this.confirmationModal = document.getElementById('confirmationModal');
+                this.loadingMessage = document.getElementById('loadingMessage');
+                this.progressDetails = document.getElementById('progressDetails');
+                this.confirmFolders = document.getElementById('confirmFolders');
+                this.confirmFiles = document.getElementById('confirmFiles');
+                this.confirmPath = document.getElementById('confirmPath');
+                this.cancelBtn = document.getElementById('cancelBtn');
+                this.confirmBtn = document.getElementById('confirmBtn');
+                
+                // Settings
+                this.createEmptyFiles = document.getElementById('createEmptyFiles');
+                this.addPlaceholderContent = document.getElementById('addPlaceholderContent');
+                this.overwriteExisting = document.getElementById('overwriteExisting');
+                this.skipExisting = document.getElementById('skipExisting');
+            }
+            
+            bindEvents() {
+                this.selectFolderBtn.addEventListener('click', () => this.selectDirectory());
+                this.parseTreeBtn.addEventListener('click', () => this.parseTree());
+                this.generateBtn.addEventListener('click', () => this.showConfirmation());
+                this.clearBtn.addEventListener('click', () => this.clearAll());
+                this.loadExampleBtn.addEventListener('click', () => this.loadExample());
+                this.clearLogBtn.addEventListener('click', () => this.clearLog());
+                
+                this.cancelBtn.addEventListener('click', () => this.hideModal('confirmationModal'));
+                this.confirmBtn.addEventListener('click', () => this.generateStructure());
+                
+                // Real-time parsing as user types
+                this.treeInput.addEventListener('input', () => {
+                    if (this.treeInput.value.trim().length > 0) {
+                        this.parseTree(true);
+                    }
+                });
+                
+                // Add keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.parseTree();
+                        } else if (e.key === 'g') {
+                            e.preventDefault();
+                            this.showConfirmation();
+                        } else if (e.key === 'l') {
+                            e.preventDefault();
+                            this.clearLog();
+                        }
+                    }
+                });
+            }
+            
+            async selectDirectory() {
+                try {
+                    // Using the File System Access API
+                    if ('showDirectoryPicker' in window) {
+                        this.selectedDirectory = await window.showDirectoryPicker();
+                        const path = await this.getDirectoryPath(this.selectedDirectory);
+                        this.selectedPath.textContent = path;
+                        this.selectedPath.classList.remove('empty');
+                        this.logStatus('success', `Selected directory: ${path}`);
+                        this.updateUI();
+                    } else {
+                        // Fallback for browsers without File System Access API
+                        this.logStatus('warning', 
+                            'File System Access API not supported. Using simulated mode. ' +
+                            'Files will be generated as downloadable blobs.');
+                        this.selectedPath.textContent = 'Simulated Mode - Files will be downloaded';
+                        this.selectedPath.classList.remove('empty');
+                        this.updateUI();
+                    }
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        this.logStatus('error', `Error selecting directory: ${error.message}`);
+                    }
+                }
+            }
+            
+            async getDirectoryPath(directoryHandle) {
+                // Try to get the path - this might not work in all browsers
+                try {
+                    if (directoryHandle.queryPermission) {
+                        const permission = await directoryHandle.queryPermission({ mode: 'readwrite' });
+                        if (permission === 'granted') {
+                            return directoryHandle.name || 'Selected Folder';
+                        }
+                    }
+                    return directoryHandle.name || 'Selected Folder';
+                } catch {
+                    return 'Selected Folder';
+                }
+            }
+            
+            parseTree(silent = false) {
+                const input = this.treeInput.value.trim();
+                if (!input) {
+                    if (!silent) this.logStatus('warning', 'Please enter a tree structure first');
+                    return;
+                }
+                
+                try {
+                    this.parsedData = this.parseTreeStructure(input);
+                    this.updateCounters();
+                    this.updatePreview();
+                    
+                    if (!silent) {
+                        this.logStatus('success', 
+                            `Parsed successfully: ${this.parsedData.folders} folders, ${this.parsedData.files} files`);
+                    }
+                } catch (error) {
+                    this.logStatus('error', `Parse error: ${error.message}`);
+                }
+            }
+            
+            parseTreeStructure(input) {
+                const lines = input.split('\n').filter(line => line.trim());
+                const items = [];
+                let folders = 0;
+                let files = 0;
+                
+                // Build stack to track hierarchy
+                const stack = [];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const trimmed = line.trimEnd();
+                    
+                    // Determine indentation level
+                    const indentMatch = line.match(/^[\s│├└─]*/)[0];
+                    const level = this.calculateIndentLevel(indentMatch);
+                    
+                    // Extract name (remove tree characters)
+                    const name = this.extractName(trimmed);
+                    
+                    // Determine if it's a folder (ends with / or has children)
+                    const isFolder = name.endsWith('/') || 
+                                    (i + 1 < lines.length && 
+                                     this.calculateIndentLevel(lines[i + 1].match(/^[\s│├└─]*/)[0]) > level);
+                    
+                    // Clean name
+                    const cleanName = isFolder && name.endsWith('/') ? name.slice(0, -1) : name;
+                    
+                    // Build path
+                    const pathParts = [];
+                    for (let j = 0; j < level; j++) {
+                        if (stack[j]) pathParts.push(stack[j]);
+                    }
+                    pathParts.push(cleanName);
+                    const fullPath = pathParts.join('/');
+                    
+                    // Update stack
+                    stack[level] = cleanName;
+                    
+                    // Add to items
+                    items.push({
+                        name: cleanName,
+                        fullPath,
+                        level,
+                        isFolder,
+                        parent: level > 0 ? stack[level - 1] : null
+                    });
+                    
+                    // Update counters
+                    if (isFolder) {
+                        folders++;
+                    } else {
+                        files++;
+                    }
+                }
+                
+                // Sort items to ensure folders are created before files
+                items.sort((a, b) => {
+                    if (a.isFolder && !b.isFolder) return -1;
+                    if (!a.isFolder && b.isFolder) return 1;
+                    return a.fullPath.localeCompare(b.fullPath);
+                });
+                
+                return { folders, files, items };
+            }
+            
+            calculateIndentLevel(indentStr) {
+                // Count visual indent level based on tree characters
+                let level = 0;
+                let i = 0;
+                
+                while (i < indentStr.length) {
+                    const char = indentStr[i];
+                    if (char === ' ' || char === '\t') {
+                        i++;
+                    } else if (char === '│' || char === '├' || char === '└') {
+                        level++;
+                        i += 3; // Skip tree characters
+                    } else if (char === '─') {
+                        i++;
+                    } else {
+                        i++;
+                    }
+                    
+                    // Skip any remaining spaces in this level
+                    while (i < indentStr.length && indentStr[i] === ' ') {
+                        i++;
+                    }
+                }
+                
+                return level;
+            }
+            
+            extractName(line) {
+                // Remove tree characters from the beginning
+                return line.replace(/^[\s│├└─]*/, '').trim();
+            }
+            
+            updateCounters() {
+                this.folderCount.textContent = this.parsedData.folders;
+                this.fileCount.textContent = this.parsedData.files;
+            }
+            
+            updatePreview() {
+                const maxItems = 20;
+                let previewHTML = '';
+                
+                this.parsedData.items.slice(0, maxItems).forEach(item => {
+                    const indent = '  '.repeat(item.level);
+                    const icon = item.isFolder ? '📁' : '📄';
+                    previewHTML += `${indent}${icon} ${item.name}${item.isFolder ? '/' : ''}\n`;
+                });
+                
+                if (this.parsedData.items.length > maxItems) {
+                    previewHTML += `\n... and ${this.parsedData.items.length - maxItems} more items`;
+                }
+                
+                this.previewContent.textContent = previewHTML || 'Preview will appear here...';
+            }
+            
+            showConfirmation() {
+                if (!this.selectedDirectory && !this.selectedPath.textContent.includes('Simulated')) {
+                    this.logStatus('warning', 'Please select a target folder first');
+                    return;
+                }
+                
+                if (this.parsedData.items.length === 0) {
+                    this.logStatus('warning', 'Please parse a tree structure first');
+                    return;
+                }
+                
+                this.confirmFolders.textContent = this.parsedData.folders;
+                this.confirmFiles.textContent = this.parsedData.files;
+                this.confirmPath.textContent = this.selectedPath.textContent;
+                
+                this.showModal('confirmationModal');
+            }
+            
+            async generateStructure() {
+                this.hideModal('confirmationModal');
+                this.showModal('loadingModal');
+                this.isGenerating = true;
+                this.updateUI();
+                
+                try {
+                    const createEmptyFiles = this.createEmptyFiles.checked;
+                    const addPlaceholder = this.addPlaceholderContent.checked;
+                    const overwrite = this.overwriteExisting.checked;
+                    const skip = this.skipExisting.checked;
+                    
+                    let createdCount = 0;
+                    let skippedCount = 0;
+                    let errorCount = 0;
+                    
+                    // Sort items: folders first, then files
+                    const sortedItems = [...this.parsedData.items].sort((a, b) => {
+                        if (a.isFolder && !b.isFolder) return -1;
+                        if (!a.isFolder && b.isFolder) return 1;
+                        return 0;
+                    });
+                    
+                    for (let i = 0; i < sortedItems.length; i++) {
+                        const item = sortedItems[i];
+                        const progress = Math.round((i / sortedItems.length) * 100);
+                        
+                        this.loadingMessage.textContent = `Creating ${item.isFolder ? 'folder' : 'file'}: ${item.name}`;
+                        this.progressDetails.innerHTML = `
+                            Progress: ${progress}%<br>
+                            Created: ${createdCount} | Skipped: ${skippedCount} | Errors: ${errorCount}
+                        `;
+                        
+                        try {
+                            if (item.isFolder) {
+                                await this.createFolder(item.fullPath);
+                            } else {
+                                if (createEmptyFiles || addPlaceholder) {
+                                    const content = addPlaceholder ? this.generatePlaceholderContent(item.name) : '';
+                                    await this.createFile(item.fullPath, content);
+                                } else {
+                                    await this.createFile(item.fullPath, '');
+                                }
+                            }
+                            createdCount++;
+                            this.logStatus('success', `Created ${item.isFolder ? 'folder' : 'file'}: ${item.fullPath}`);
+                        } catch (error) {
+                            if (error.message.includes('already exists') && skip) {
+                                skippedCount++;
+                                this.logStatus('info', `Skipped existing: ${item.fullPath}`);
+                            } else {
+                                errorCount++;
+                                this.logStatus('error', `Failed to create ${item.fullPath}: ${error.message}`);
+                            }
+                        }
+                        
+                        // Small delay to show progress
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                    
+                    this.logStatus('success', 
+                        `Generation complete! Created: ${createdCount}, Skipped: ${skippedCount}, Errors: ${errorCount}`);
+                    
+                    // Show completion message
+                    this.loadingMessage.textContent = 'Generation Complete!';
+                    this.progressDetails.innerHTML = `
+                        <div style="color: var(--success);">
+                            ✅ Successfully created ${createdCount} items<br>
+                            ⏭️ Skipped ${skippedCount} existing items<br>
+                            ❌ ${errorCount} errors
+                        </div>
+                    `;
+                    
+                    // Auto-close after 2 seconds
+                    setTimeout(() => {
+                        this.hideModal('loadingModal');
+                    }, 2000);
+                    
+                } catch (error) {
+                    this.logStatus('error', `Generation failed: ${error.message}`);
+                    this.hideModal('loadingModal');
+                } finally {
+                    this.isGenerating = false;
+                    this.updateUI();
+                }
+            }
+            
+            async createFolder(path) {
+                if (this.selectedDirectory && 'showDirectoryPicker' in window) {
+                    // Use File System Access API
+                    const parts = path.split('/');
+                    let currentHandle = this.selectedDirectory;
+                    
+                    for (const part of parts) {
+                        if (part) {
+                            try {
+                                currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+                            } catch (error) {
+                                throw new Error(`Failed to create folder ${part}: ${error.message}`);
+                            }
+                        }
+                    }
+                } else {
+                    // Simulated mode - just log
+                    console.log(`[SIMULATED] Would create folder: ${path}`);
+                }
+            }
+            
+            async createFile(path, content = '') {
+                if (this.selectedDirectory && 'showDirectoryPicker' in window) {
+                    // Use File System Access API
+                    const parts = path.split('/');
+                    const fileName = parts.pop();
+                    
+                    let currentHandle = this.selectedDirectory;
+                    for (const part of parts) {
+                        if (part) {
+                            try {
+                                currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+                            } catch (error) {
+                                throw new Error(`Failed to access folder ${part}: ${error.message}`);
+                            }
+                        }
+                    }
+                    
+                    try {
+                        const fileHandle = await currentHandle.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(content);
+                        await writable.close();
+                    } catch (error) {
+                        throw new Error(`Failed to create file ${fileName}: ${error.message}`);
+                    }
+                } else {
+                    // Simulated mode - create downloadable blob
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = path.split('/').pop() || 'file.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            }
+            
+            generatePlaceholderContent(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const date = new Date().toISOString().split('T')[0];
+                
+                const placeholders = {
+                    'js': `// ${filename}\n// Generated on ${date}\n\nconsole.log('Hello from ${filename}');`,
+                    'jsx': `// ${filename}\n// Generated on ${date}\n\nimport React from 'react';\n\nexport default function ${filename.split('.')[0]}() {\n  return (\n    <div>\n      {/* Your component here */}\n    </div>\n  );\n}`,
+                    'ts': `// ${filename}\n// Generated on ${date}\n\nconsole.log('Hello from ${filename}');`,
+                    'tsx': `// ${filename}\n// Generated on ${date}\n\nimport React from 'react';\n\nexport default function ${filename.split('.')[0]}() {\n  return (\n    <div>\n      {/* Your component here */}\n    </div>\n  );\n}`,
+                    'html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>${filename}</title>\n</head>\n<body>\n    <h1>${filename}</h1>\n    <p>Generated on ${date}</p>\n</body>\n</html>`,
+                    'css': `/* ${filename} */\n/* Generated on ${date} */\n\nbody {\n    margin: 0;\n    padding: 0;\n    font-family: sans-serif;\n}`,
+                    'json': `{\n  "name": "${filename.split('.')[0]}",\n  "version": "1.0.0",\n  "description": "Generated on ${date}"\n}`,
+                    'md': `# ${filename.split('.')[0]}\n\nGenerated on ${date}\n\n## Description\n\nYour content here.`,
+                    'py': `# ${filename}\n# Generated on ${date}\n\ndef main():\n    print("Hello from ${filename}")\n\nif __name__ == "__main__":\n    main()`,
+                    'java': `// ${filename}\n// Generated on ${date}\n\npublic class ${filename.split('.')[0]} {\n    public static void main(String[] args) {\n        System.out.println("Hello from ${filename}");\n    }\n}`,
+                    'cpp': `// ${filename}\n// Generated on ${date}\n\n#include <iostream>\n\nint main() {\n    std::cout << "Hello from ${filename}" << std::endl;\n    return 0;\n}`
+                };
+                
+                return placeholders[ext] || `// ${filename}\n// Generated on ${date}\n// Placeholder content`;
+            }
+            
+            showModal(modalId) {
+                document.getElementById(modalId).classList.add('active');
+            }
+            
+            hideModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+            
+            logStatus(type, message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const statusItem = document.createElement('div');
+                statusItem.className = `status-item slide-in`;
+                
+                let icon = 'ℹ️';
+                if (type === 'success') icon = '✅';
+                if (type === 'error') icon = '❌';
+                if (type === 'warning') icon = '⚠️';
+                
+                statusItem.textContent = `[${timestamp}] ${icon} ${message}`;
+                this.statusLogElement.prepend(statusItem);
+                
+                // Keep log manageable
+                if (this.statusLogElement.children.length > 50) {
+                    this.statusLogElement.removeChild(this.statusLogElement.lastChild);
+                }
+                
+                // Auto-scroll to top
+                this.statusLogElement.scrollTop = 0;
+                
+                // Also log to console for debugging
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+            
+            clearLog() {
+                this.statusLogElement.innerHTML = '<div class="status-item">Log cleared</div>';
+            }
+            
+            clearAll() {
+                this.treeInput.value = '';
+                this.selectedDirectory = null;
+                this.selectedPath.textContent = 'No folder selected. Click "Select Target Folder" to choose a location.';
+                this.selectedPath.classList.add('empty');
+                this.parsedData = { folders: 0, files: 0, items: [] };
+                this.updateCounters();
+                this.previewContent.textContent = 'Preview will appear here...';
+                this.logStatus('info', 'All inputs cleared');
+                this.updateUI();
+            }
+            
+            loadExample() {
+                const exampleTree = `my-awesome-project/
+├── src/
+│   ├── index.js
+│   ├── components/
+│   │   ├── Button.js
+│   │   ├── Header.js
+│   │   └── Footer.js
+│   ├── utils/
+│   │   ├── api.js
+│   │   └── helpers.js
+│   └── styles/
+│       ├── main.css
+│       └── variables.css
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   └── assets/
+│       ├── logo.png
+│       └── banner.jpg
+├── tests/
+│   ├── unit/
+│   │   └── utils.test.js
+│   └── integration/
+│       └── api.test.js
+├── docs/
+│   ├── README.md
+│   └── API.md
+├── .gitignore
+├── package.json
+├── webpack.config.js
+└── README.md`;
+                
+                this.treeInput.value = exampleTree;
+                this.parseTree(true);
+                this.logStatus('info', 'Loaded example project structure');
+            }
+            
+            updateUI() {
+                const hasInput = this.treeInput.value.trim().length > 0;
+                const hasSelectedFolder = !this.selectedPath.classList.contains('empty');
+                const hasParsedData = this.parsedData.items.length > 0;
+                
+                // Update button states
+                this.parseTreeBtn.disabled = !hasInput;
+                this.generateBtn.disabled = !hasSelectedFolder || !hasParsedData || this.isGenerating;
+                
+                // Update button text if generating
+                if (this.isGenerating) {
+                    this.generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                } else {
+                    this.generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate Structure';
+                }
+            }
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new TreeStructureGenerator();
+            
+            // Add a welcome message
+            setTimeout(() => {
+                const welcomeMsg = `🌟 Welcome to Tree Structure Generator!
+                
+Features:
+• Parse tree structures from any format
+• Create real folders and files in your system
+• Smart parsing with visual indentation detection
+• Real-time preview and validation
+• Placeholder content generation
+• Conflict resolution options
+• Detailed generation logs
+
+Keyboard Shortcuts:
+Ctrl+Enter - Parse tree
+Ctrl+G - Generate structure
+Ctrl+L - Clear log
+
+Ready to build your project structure!`;
+                
+                console.log(welcomeMsg);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
