@@ -2,6 +2,10 @@
 
 Two simple tools to work with folder structures - one to **View** folders, one to **Create** folders.
 
+![html](https://img.shields.io/badge/HTML-red)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+
 ## 📁 Project Structure
 ```
 
