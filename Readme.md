@@ -38,4 +38,4 @@ folder-tree-architect
 - That's it! No install needed
 
 ---
-**Insights - 2026 **
+**Insights - 2026**
